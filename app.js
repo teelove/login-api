@@ -1,0 +1,77 @@
+var express = require("express");
+var cors = require("cors");
+var app = express();
+var bodyParser = require("body-parser");
+const mysql = require("mysql2");
+
+// create application/json parser
+var jsonParser = bodyParser.json();
+
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+var jwt = require("jsonwebtoken");
+const secret = "Fullstack-Login-2021";
+
+app.use(cors());
+
+// create the connection to database
+const connection = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  database: "mydb",
+});
+
+app.post("/register", jsonParser, function (req, res, next) {
+  bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
+    connection.execute(
+      "INSERT INTO users (email,password,fname,lname) VALUES (?,?,?,?)",
+      [req.body.email, hash, req.body.fname, req.body.lname],
+      function (err, results, fields) {
+        if (err) {
+          res.json({ status: "error", message: err });
+          return;
+        }
+        res.json({ status: "ok" });
+        // If you execute same statement again, it will be picked from a LRU cache
+        // which will save query preparation time and give better performance
+      }
+    );
+  });
+  // execute will internally call prepare and query
+});
+
+app.post("/login", jsonParser, function (req, res, next) {
+  connection.execute(
+    "SELECT * FROM users WHERE email=?",
+    [req.body.email],
+    function (err, users, fields) {
+      if (err) {
+        res.json({ status: "error", message: err });
+        return;
+      }
+      if (users.length == 0) {
+        res.json({ status: "error", message: "no user found" });
+        return;
+      }
+      // Load hash from your password DB.
+      bcrypt.compare(
+        req.body.password,
+        users[0].password,
+        function (err, isLogin) {
+          // result == true'
+          if (isLogin) {
+            res.json({ status: "ok", message: "login suscess" });
+          } else {
+            res.json({ status: "ok", message: "login failed" });
+          }
+        }
+      );
+      // If you execute same statement again, it will be picked from a LRU cache
+      // which will save query preparation time and give better performance
+    }
+  );
+});
+
+app.listen(3333, function () {
+  console.log("CORS-enabled web server listening on port 3333");
+});

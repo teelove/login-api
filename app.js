@@ -60,7 +60,8 @@ app.post("/login", jsonParser, function (req, res, next) {
         function (err, isLogin) {
           // result == true'
           if (isLogin) {
-            res.json({ status: "ok", message: "login suscess" });
+            var token = jwt.sign({email: users[0].email},secret,{expiresIn:'1h'});
+            res.json({ status: "ok", message: "login suscess" ,token});
           } else {
             res.json({ status: "ok", message: "login failed" });
           }
@@ -71,6 +72,20 @@ app.post("/login", jsonParser, function (req, res, next) {
     }
   );
 });
+
+app.post("/authen", jsonParser, function (req, res, next) {
+  try{
+    const token = req.headers.authorization.split(' ')[1]
+    var decoded = jwt.verify(token,secret);
+    res.json({decoded})
+  }catch(err){
+
+  }
+  
+
+
+})
+
 
 app.listen(3333, function () {
   console.log("CORS-enabled web server listening on port 3333");

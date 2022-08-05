@@ -63,7 +63,7 @@ app.post("/login", jsonParser, function (req, res, next) {
             var token = jwt.sign({ email: users[0].email }, secret, {
               expiresIn: "1h",
             });
-            res.json({ status: "ok", message: "login suscess" });
+            res.json({ status: "ok", message: "login suscess" ,token});
           } else {
             res.json({ status: "ok", message: "login failed" });
           }
